@@ -40,13 +40,12 @@ create policy "Un utilisateur modifie son propre profil"
   on public.profiles for update
   using (auth.uid() = id);
 
-create policy "Les admins voient tous les profils"
-  on public.profiles for select
-  using (
-    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
-  );
-
 -- Petite fonction utilitaire réutilisée dans les policies des autres tables.
+-- SECURITY DEFINER + appartenance au rôle propriétaire (postgres, qui a
+-- BYPASSRLS) : la requête interne à la fonction ne redéclenche PAS la RLS
+-- sur profiles. Indispensable ici : une policy qui interrogerait `profiles`
+-- directement (sans passer par cette fonction) provoquerait une récursion
+-- infinie, puisque cette requête interne redéclenche la policy elle-même.
 create function public.is_admin()
 returns boolean
 language sql
@@ -57,6 +56,10 @@ as $$
     select 1 from public.profiles where id = auth.uid() and role = 'admin'
   );
 $$;
+
+create policy "Les admins voient tous les profils"
+  on public.profiles for select
+  using (public.is_admin());
 
 -- Trigger générique pour maintenir updated_at, réutilisé par les tables suivantes.
 create function public.set_updated_at()
