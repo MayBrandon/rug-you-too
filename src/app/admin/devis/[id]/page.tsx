@@ -1,10 +1,17 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { STATUTS_DEVIS_LABELS } from "@/lib/constants";
-import { ETAPES, calculerPrix, getOptions } from "@/lib/configurateur-options";
+import { getOptionsCatalogue, getProduitBase, calculerPrixCatalogue } from "@/lib/catalogue";
 import type { CategorieTapis, TypeOption } from "@/types/database.types";
 import { FixerDevisForm } from "@/components/admin/FixerDevisForm";
 import { PrendreEnCharge } from "@/components/admin/PrendreEnCharge";
+
+const ETAPES: { type: TypeOption; label: string }[] = [
+  { type: "taille", label: "Taille" },
+  { type: "forme", label: "Forme" },
+  { type: "couleur", label: "Couleur" },
+  { type: "matiere", label: "Matière" },
+];
 
 export default async function AdminDevisDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -25,7 +32,14 @@ export default async function AdminDevisDetailPage({ params }: { params: { id: s
 
   const categorie = demande.categorie as CategorieTapis;
   const configuration = (demande.configuration ?? {}) as Record<TypeOption, string>;
-  const prixSuggere = calculerPrix(categorie, configuration);
+
+  // Le catalogue a pu changer depuis l'envoi de la demande : on inclut les
+  // options désactivées pour retrouver le supplément d'un choix historique.
+  const [produit, optionsCatalogue] = await Promise.all([
+    getProduitBase(supabase, categorie),
+    getOptionsCatalogue(supabase, categorie, { includeInactives: true }),
+  ]);
+  const prixSuggere = calculerPrixCatalogue(produit?.prixBase ?? 0, optionsCatalogue, configuration);
 
   // Fichiers privés : on génère des URLs signées à la volée (1h) plutôt que
   // de stocker des liens publics — voir supabase/migrations/0005_storage.sql,
@@ -60,13 +74,10 @@ export default async function AdminDevisDetailPage({ params }: { params: { id: s
             <ul className="flex flex-col gap-2 text-sm">
               {ETAPES.map((etape) => {
                 const valeur = configuration[etape.type];
-                const option = valeur
-                  ? getOptions(categorie, etape.type).find((o) => o.value === valeur)
-                  : undefined;
                 return (
                   <li key={etape.type} className="flex justify-between border-b border-base-600 py-2 last:border-0">
                     <span className="text-ink-faint">{etape.label}</span>
-                    <span>{option?.label ?? valeur ?? "—"}</span>
+                    <span>{valeur ?? "—"}</span>
                   </li>
                 );
               })}

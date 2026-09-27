@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CategorieTapis, TypeOption } from "@/types/database.types";
-import { ETAPES, calculerPrix, getOptions } from "@/lib/configurateur-options";
+import { calculerPrixCatalogue, type OptionCatalogue } from "@/lib/catalogue";
 import { StepOption } from "./StepOption";
 import { UploadDesign } from "./UploadDesign";
 import { PriceSummary } from "./PriceSummary";
@@ -13,14 +13,23 @@ import { useUser } from "@/hooks/useUser";
 interface ConfigurateurProps {
   categorie: CategorieTapis;
   categorieLabel: string;
+  prixBase: number;
+  options: Record<TypeOption, OptionCatalogue[]>;
 }
 
 type Selection = Partial<Record<TypeOption, string>>;
 type Etape = TypeOption | "personnalisation" | "recap";
 
+const ETAPES: { type: TypeOption; label: string }[] = [
+  { type: "taille", label: "Taille" },
+  { type: "forme", label: "Forme" },
+  { type: "couleur", label: "Couleur" },
+  { type: "matiere", label: "Matière" },
+];
+
 const ORDRE_ETAPES: Etape[] = [...ETAPES.map((e) => e.type), "personnalisation", "recap"];
 
-export function Configurateur({ categorie, categorieLabel }: ConfigurateurProps) {
+export function Configurateur({ categorie, categorieLabel, prixBase, options }: ConfigurateurProps) {
   const router = useRouter();
   const { user } = useUser();
 
@@ -32,7 +41,10 @@ export function Configurateur({ categorie, categorieLabel }: ConfigurateurProps)
   const [erreur, setErreur] = useState<string | null>(null);
 
   const etapeActuelle = ORDRE_ETAPES[etapeIndex];
-  const prix = useMemo(() => calculerPrix(categorie, selection), [categorie, selection]);
+  const prix = useMemo(
+    () => calculerPrixCatalogue(prixBase, options, selection),
+    [prixBase, options, selection]
+  );
 
   const etapeConfigValide =
     etapeActuelle === "personnalisation" || etapeActuelle === "recap"
@@ -105,7 +117,7 @@ export function Configurateur({ categorie, categorieLabel }: ConfigurateurProps)
         {etapeActuelle !== "personnalisation" && etapeActuelle !== "recap" && (
           <StepOption
             label={ETAPES.find((e) => e.type === etapeActuelle)!.label}
-            options={getOptions(categorie, etapeActuelle as TypeOption)}
+            options={options[etapeActuelle as TypeOption]}
             valeur={selection[etapeActuelle as TypeOption]}
             onChange={(valeur) =>
               setSelection((s) => ({ ...s, [etapeActuelle as TypeOption]: valeur }))
@@ -149,7 +161,7 @@ export function Configurateur({ categorie, categorieLabel }: ConfigurateurProps)
         </div>
       </div>
 
-      <PriceSummary categorie={categorie} selection={selection} prixIndicatif={prix} />
+      <PriceSummary categorie={categorie} options={options} selection={selection} prixIndicatif={prix} />
     </div>
   );
 }

@@ -1,13 +1,21 @@
 import type { CategorieTapis, TypeOption } from "@/types/database.types";
-import { ETAPES, getOptions } from "@/lib/configurateur-options";
+import type { OptionCatalogue } from "@/lib/catalogue";
 
 interface PriceSummaryProps {
   categorie: CategorieTapis;
+  options: Record<TypeOption, OptionCatalogue[]>;
   selection: Partial<Record<TypeOption, string>>;
   prixIndicatif: number;
 }
 
-export function PriceSummary({ categorie, selection, prixIndicatif }: PriceSummaryProps) {
+const ETAPES: { type: TypeOption; label: string }[] = [
+  { type: "taille", label: "Taille" },
+  { type: "forme", label: "Forme" },
+  { type: "couleur", label: "Couleur" },
+  { type: "matiere", label: "Matière" },
+];
+
+export function PriceSummary({ categorie, options, selection, prixIndicatif }: PriceSummaryProps) {
   return (
     <aside className="flex h-fit flex-col gap-5 border border-base-600 bg-base-800 p-6">
       <h3 className="font-display text-xl">Ton tapis {categorie}</h3>
@@ -15,7 +23,7 @@ export function PriceSummary({ categorie, selection, prixIndicatif }: PriceSumma
       <ul className="flex flex-col gap-2 text-sm">
         {ETAPES.map((etape) => {
           const valeur = selection[etape.type];
-          const option = valeur ? getOptions(categorie, etape.type).find((o) => o.value === valeur) : undefined;
+          const option = valeur ? options[etape.type].find((o) => o.label === valeur) : undefined;
           return (
             <li key={etape.type} className="flex justify-between border-b border-base-600 pb-2">
               <span className="text-ink-faint">{etape.label}</span>

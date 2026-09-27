@@ -1,9 +1,15 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { STATUTS_DEVIS_LABELS } from "@/lib/constants";
-import { ETAPES, getOptions } from "@/lib/configurateur-options";
 import type { CategorieTapis, TypeOption } from "@/types/database.types";
 import { ReponseDevis } from "@/components/devis/ReponseDevis";
+
+const ETAPES: { type: TypeOption; label: string }[] = [
+  { type: "taille", label: "Taille" },
+  { type: "forme", label: "Forme" },
+  { type: "couleur", label: "Couleur" },
+  { type: "matiere", label: "Matière" },
+];
 
 export default async function SuiviDevisPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -39,11 +45,10 @@ export default async function SuiviDevisPage({ params }: { params: { id: string 
       <ul className="flex flex-col gap-2 border border-base-600 bg-base-800 p-6 text-sm">
         {ETAPES.map((etape) => {
           const valeur = (demande.configuration as Record<TypeOption, string>)?.[etape.type];
-          const option = valeur ? getOptions(categorie, etape.type).find((o) => o.value === valeur) : undefined;
           return (
             <li key={etape.type} className="flex justify-between border-b border-base-600 py-2 last:border-0">
               <span className="text-ink-faint">{etape.label}</span>
-              <span>{option?.label ?? valeur ?? "—"}</span>
+              <span>{valeur ?? "—"}</span>
             </li>
           );
         })}
