@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-// "Commandes" sera ajouté une fois /admin/commandes construit (prochaine étape).
 const NAV_ADMIN = [
   { href: "/admin", label: "Tableau de bord" },
+  { href: "/admin/demandes", label: "Demandes" },
   { href: "/admin/produits", label: "Catalogue" },
+  { href: "/admin/commandes", label: "Commandes" },
 ];
 
 /**
