@@ -29,17 +29,26 @@ function ConnexionForm() {
     setEnvoi(true);
     setErreur(null);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    setEnvoi(false);
-    if (error) {
-      setErreur(error.message);
-      return;
+      if (error) {
+        setErreur(error.message);
+        return;
+      }
+
+      router.push(next);
+      router.refresh();
+    } catch (err) {
+      setErreur(
+        err instanceof Error
+          ? `Erreur technique : ${err.message}`
+          : "Une erreur inattendue est survenue."
+      );
+    } finally {
+      setEnvoi(false);
     }
-
-    router.push(next);
-    router.refresh();
   }
 
   return (

@@ -31,31 +31,43 @@ function InscriptionForm() {
     setEnvoi(true);
     setErreur(null);
 
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { nom_complet: nomComplet },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
-    });
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { nom_complet: nomComplet },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        },
+      });
 
-    setEnvoi(false);
-    if (error) {
-      setErreur(error.message);
-      return;
+      if (error) {
+        setErreur(error.message);
+        return;
+      }
+
+      // Si la confirmation email est désactivée sur le projet Supabase, la
+      // session est déjà active : on peut enchaîner directement.
+      if (data.session) {
+        router.push(next);
+        router.refresh();
+        return;
+      }
+
+      setInscrit(true);
+    } catch (err) {
+      // Erreur réseau, client Supabase mal configuré (variables d'env
+      // manquantes/invalides), etc. — sans ce filet, le bouton restait
+      // bloqué sur "Création…" indéfiniment.
+      setErreur(
+        err instanceof Error
+          ? `Erreur technique : ${err.message}`
+          : "Une erreur inattendue est survenue."
+      );
+    } finally {
+      setEnvoi(false);
     }
-
-    // Si la confirmation email est désactivée sur le projet Supabase, la
-    // session est déjà active : on peut enchaîner directement.
-    if (data.session) {
-      router.push(next);
-      router.refresh();
-      return;
-    }
-
-    setInscrit(true);
   }
 
   if (inscrit) {

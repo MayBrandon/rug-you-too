@@ -56,26 +56,33 @@ export function Configurateur({ categorie, categorieLabel }: ConfigurateurProps)
     setEnvoi(true);
     setErreur(null);
 
-    const res = await fetch("/api/devis", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        categorie,
-        configuration: selection,
-        fichiersUrls: fichiers.map((f) => f.chemin),
-        messageClient: message || undefined,
-      }),
-    });
+    try {
+      const res = await fetch("/api/devis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categorie,
+          configuration: selection,
+          fichiersUrls: fichiers.map((f) => f.chemin),
+          messageClient: message || undefined,
+        }),
+      });
 
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      setErreur(body?.error?._errors?.[0] ?? body?.error ?? "Une erreur est survenue.");
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setErreur(body?.error?._errors?.[0] ?? body?.error ?? "Une erreur est survenue.");
+        return;
+      }
+
+      const { demande } = await res.json();
+      router.push(`/devis/${demande.id}`);
+    } catch (err) {
+      setErreur(
+        err instanceof Error ? `Erreur technique : ${err.message}` : "Une erreur inattendue est survenue."
+      );
+    } finally {
       setEnvoi(false);
-      return;
     }
-
-    const { demande } = await res.json();
-    router.push(`/devis/${demande.id}`);
   }
 
   return (
