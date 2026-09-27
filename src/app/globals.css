@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: theme("colors.base.950");
+  color: theme("colors.ink.light");
+}
+
+h1, h2, h3, .font-display {
+  text-transform: uppercase;
+}
