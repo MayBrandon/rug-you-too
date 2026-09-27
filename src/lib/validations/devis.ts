@@ -14,7 +14,10 @@ export const demandeDevisSchema = z.object({
     couleur: z.string().min(1, "Choisis une couleur"),
     matiere: z.string().min(1, "Choisis une matière"),
   }),
-  fichiersUrls: z.array(z.string().url()).max(5, "5 fichiers maximum").default([]),
+  // Chemins dans le bucket Storage "devis-uploads" (pas des URLs publiques :
+  // le bucket est privé, l'admin les consulte via une URL signée générée
+  // à la demande — voir supabase/migrations/0005_storage.sql).
+  fichiersUrls: z.array(z.string().min(1)).max(5, "5 fichiers maximum").default([]),
   messageClient: z.string().max(1000).optional(),
 });
 
