@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Signature invalide: ${err}` }, { status: 400 });
   }
 
-  if (event.type === "checkout.session.completed" || event.type === "payment_link.completed") {
+  if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const demandeDevisId = session.metadata?.demande_devis_id;
 
