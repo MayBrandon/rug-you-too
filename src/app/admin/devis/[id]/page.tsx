@@ -1,17 +1,21 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { STATUTS_DEVIS_LABELS } from "@/lib/constants";
-import { getOptionsCatalogue, getProduitBase, calculerPrixCatalogue } from "@/lib/catalogue";
-import type { CategorieTapis, TypeOption } from "@/types/database.types";
+import { getOptionsCatalogue, getProduitBase, calculerPrixTuftage } from "@/lib/catalogue";
+import type { CategorieTapis } from "@/types/database.types";
 import { FixerDevisForm } from "@/components/admin/FixerDevisForm";
 import { PrendreEnCharge } from "@/components/admin/PrendreEnCharge";
 
-const ETAPES: { type: TypeOption; label: string }[] = [
-  { type: "taille", label: "Taille" },
-  { type: "forme", label: "Forme" },
-  { type: "couleur", label: "Couleur" },
-  { type: "matiere", label: "Matière" },
-];
+/**
+ * Les demandes envoyées avant le passage aux couleurs multi-choix stockaient
+ * `couleur` comme une simple chaîne — on les normalise en tableau pour rester
+ * compatible avec les anciennes demandes en base.
+ */
+function couleursDeConfiguration(configuration: Record<string, string | string[]>): string[] {
+  const valeur = configuration.couleur;
+  if (Array.isArray(valeur)) return valeur;
+  return valeur ? [valeur] : [];
+}
 
 export default async function AdminDevisDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -31,7 +35,8 @@ export default async function AdminDevisDetailPage({ params }: { params: { id: s
     .single();
 
   const categorie = demande.categorie as CategorieTapis;
-  const configuration = (demande.configuration ?? {}) as Record<TypeOption, string>;
+  const configuration = (demande.configuration ?? {}) as Record<string, string | string[]>;
+  const couleursChoisies = couleursDeConfiguration(configuration);
 
   // Le catalogue a pu changer depuis l'envoi de la demande : on inclut les
   // options désactivées pour retrouver le supplément d'un choix historique.
@@ -39,7 +44,11 @@ export default async function AdminDevisDetailPage({ params }: { params: { id: s
     getProduitBase(supabase, categorie),
     getOptionsCatalogue(supabase, categorie, { includeInactives: true }),
   ]);
-  const prixSuggere = calculerPrixCatalogue(produit?.prixBase ?? 0, optionsCatalogue, configuration);
+  const prixSuggere = calculerPrixTuftage(produit?.prixBase ?? 0, optionsCatalogue, {
+    taille: typeof configuration.taille === "string" ? configuration.taille : undefined,
+    forme: typeof configuration.forme === "string" ? configuration.forme : undefined,
+    couleurs: couleursChoisies,
+  });
 
   // Fichiers privés : on génère des URLs signées à la volée (1h) plutôt que
   // de stocker des liens publics — voir supabase/migrations/0005_storage.sql,
@@ -72,15 +81,20 @@ export default async function AdminDevisDetailPage({ params }: { params: { id: s
           <div className="border border-base-600 bg-base-800 p-6">
             <h2 className="mb-4 font-display text-xl">Configuration choisie</h2>
             <ul className="flex flex-col gap-2 text-sm">
-              {ETAPES.map((etape) => {
-                const valeur = configuration[etape.type];
-                return (
-                  <li key={etape.type} className="flex justify-between border-b border-base-600 py-2 last:border-0">
-                    <span className="text-ink-faint">{etape.label}</span>
-                    <span>{valeur ?? "—"}</span>
-                  </li>
-                );
-              })}
+              <li className="flex justify-between border-b border-base-600 py-2">
+                <span className="text-ink-faint">Taille</span>
+                <span>{typeof configuration.taille === "string" ? configuration.taille : "—"}</span>
+              </li>
+              <li className="flex justify-between border-b border-base-600 py-2">
+                <span className="text-ink-faint">Forme</span>
+                <span>{typeof configuration.forme === "string" ? configuration.forme : "—"}</span>
+              </li>
+              <li className="flex justify-between gap-4 py-2 last:border-0">
+                <span className="shrink-0 text-ink-faint">Couleurs</span>
+                <span className="text-right">
+                  {couleursChoisies.length > 0 ? couleursChoisies.join(", ") : "—"}
+                </span>
+              </li>
             </ul>
           </div>
 

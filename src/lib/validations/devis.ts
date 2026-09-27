@@ -11,14 +11,13 @@ export const demandeDevisSchema = z.object({
   configuration: z.object({
     taille: z.string().min(1, "Choisis une taille"),
     forme: z.string().min(1, "Choisis une forme"),
-    couleur: z.string().min(1, "Choisis une couleur"),
-    matiere: z.string().min(1, "Choisis une matière"),
+    couleur: z.array(z.string().min(1)).min(1, "Choisis au moins une couleur"),
   }),
   // Chemins dans le bucket Storage "devis-uploads" (pas des URLs publiques :
   // le bucket est privé, l'admin les consulte via une URL signée générée
   // à la demande — voir supabase/migrations/0005_storage.sql).
-  fichiersUrls: z.array(z.string().min(1)).max(5, "5 fichiers maximum").default([]),
-  messageClient: z.string().max(1000).optional(),
+  fichiersUrls: z.array(z.string().min(1)).min(1, "Ajoute au moins une photo ou un design de référence").max(5, "5 fichiers maximum"),
+  messageClient: z.string().min(1, "Décris ton projet").max(1000),
 });
 
 export type DemandeDevisInput = z.infer<typeof demandeDevisSchema>;

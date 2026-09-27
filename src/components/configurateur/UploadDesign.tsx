@@ -12,6 +12,7 @@ interface FichierUploade {
 interface UploadDesignProps {
   fichiers: FichierUploade[];
   onChange: (fichiers: FichierUploade[]) => void;
+  requis?: boolean;
 }
 
 const MAX_FICHIERS = 5;
@@ -24,7 +25,7 @@ const TAILLE_MAX_MO = 8;
  * policy RLS du bucket autorise un client à écrire dans son propre dossier
  * (voir supabase/migrations/0005_storage.sql).
  */
-export function UploadDesign({ fichiers, onChange }: UploadDesignProps) {
+export function UploadDesign({ fichiers, onChange, requis = false }: UploadDesignProps) {
   const { user } = useUser();
   const inputRef = useRef<HTMLInputElement>(null);
   const [envoi, setEnvoi] = useState(false);
@@ -82,10 +83,14 @@ export function UploadDesign({ fichiers, onChange }: UploadDesignProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="font-display text-2xl">Personnalisation (optionnel)</h2>
+      <h2 className="font-display text-2xl">
+        {requis ? "Ta photo ou ton design de référence" : "Personnalisation (optionnel)"}
+      </h2>
       <p className="text-[15px] text-ink-muted">
-        Un logo, un motif ou une photo à reproduire sur ton tapis — {MAX_FICHIERS} fichiers max,{" "}
-        {TAILLE_MAX_MO} Mo chacun.
+        {requis
+          ? "Un logo, un motif ou une photo d'inspiration — indispensable pour qu'on puisse chiffrer et tufter ton tapis précisément."
+          : "Un logo, un motif ou une photo à reproduire sur ton tapis."}{" "}
+        {MAX_FICHIERS} fichiers max, {TAILLE_MAX_MO} Mo chacun.
       </p>
 
       {!user && (

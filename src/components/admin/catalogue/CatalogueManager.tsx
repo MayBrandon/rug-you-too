@@ -11,11 +11,12 @@ interface CatalogueManagerProps {
   options: OptionRowClient[];
 }
 
+// Le tuftage se fait toujours en laine : pas d'étape "matière" dans le
+// configurateur, donc pas d'onglet ici non plus.
 const TYPES: { type: TypeOption; label: string }[] = [
   { type: "taille", label: "Tailles" },
   { type: "forme", label: "Formes" },
   { type: "couleur", label: "Couleurs" },
-  { type: "matiere", label: "Matières" },
 ];
 
 /**

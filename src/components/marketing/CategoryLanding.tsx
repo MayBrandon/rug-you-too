@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES } from "@/lib/constants";
-import { getProduitBase, getOptionsCatalogue } from "@/lib/catalogue";
+import { getProduitBase, getOptionsCatalogue, PRIX_TUFTAGE_PAR_M2 } from "@/lib/catalogue";
 import { Button } from "@/components/ui/Button";
 import type { CategorieTapis, TypeOption } from "@/types/database.types";
 
@@ -8,7 +8,6 @@ const TYPES: { type: TypeOption; label: string }[] = [
   { type: "taille", label: "Taille" },
   { type: "forme", label: "Forme" },
   { type: "couleur", label: "Couleur" },
-  { type: "matiere", label: "Matière" },
 ];
 
 /**
@@ -40,13 +39,14 @@ export async function CategoryLanding({ categorie }: { categorie: CategorieTapis
           </Button>
           {produit && (
             <span className="text-sm text-ink-faint">
-              À partir de <span className="text-accent-gold">{produit.prixBase} €</span>
+              À partir de <span className="text-accent-gold">{produit.prixBase} €</span> — soit environ{" "}
+              {PRIX_TUFTAGE_PAR_M2} €/m² tufté main
             </span>
           )}
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-6 px-8 py-16 sm:grid-cols-2 md:px-16 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-6 px-8 py-16 sm:grid-cols-2 md:px-16 lg:grid-cols-3">
         {TYPES.map(({ type, label }) => (
           <div key={type} className="flex flex-col gap-3 border-t-4 border-accent-teal bg-base-800 p-5">
             <h3 className="font-display text-lg">{label}</h3>
@@ -63,8 +63,8 @@ export async function CategoryLanding({ categorie }: { categorie: CategorieTapis
       <section className="flex flex-col items-center gap-6 border-t border-base-600 bg-base-800 px-8 py-16 text-center md:px-16">
         <h2 className="font-display text-3xl">Prêt à configurer le tien ?</h2>
         <p className="max-w-[520px] text-ink-muted">
-          Choisis ta taille, ta forme, ta couleur et ta matière — reçois un devis gratuit avant toute
-          fabrication.
+          Choisis ta taille, ta forme et tes couleurs, ajoute une photo de référence — reçois un devis
+          gratuit avant toute fabrication.
         </p>
         <Button href={`/configurateur/${categorie}`} variant="teal">
           Configurer mon tapis {meta.label.toLowerCase()}

@@ -4,7 +4,7 @@ const ETAPES = [
   {
     titre: "1. Tu configures",
     texte:
-      "Choisis ta catégorie (voiture, sol, mur, bureau), puis la taille, la forme, la couleur et la matière. Ajoute ton logo ou ton design si tu veux une personnalisation sur mesure.",
+      "Choisis ta catégorie (voiture, sol, mur, bureau), puis la taille, la forme et tes couleurs. Décris ton projet et ajoute une photo ou un design de référence.",
   },
   {
     titre: "2. On te propose un devis",

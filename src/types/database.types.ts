@@ -70,7 +70,7 @@ type DemandeDevisRow = {
   client_id: string;
   categorie: CategorieTapis;
   produit_id: string | null;
-  configuration: Record<string, string>;
+  configuration: Record<string, string | string[]>;
   fichiers_urls: string[];
   message_client: string | null;
   statut: StatutDevis;

@@ -39,6 +39,13 @@ export function OptionsPanel({ categorie, type, label, options }: OptionsPanelPr
           {ajoutOuvert ? "Annuler" : "+ Ajouter"}
         </Button>
       </div>
+      {type === "taille" && (
+        <p className="text-xs text-ink-faint">
+          Renseigne les dimensions au format "Largeur x Hauteur" en cm (ex : 90x90) — le prix est
+          calculé automatiquement au m² à partir de là. Sans dimensions reconnues (tailles de tapis
+          voiture par exemple), le supplément ci-dessous est ajouté tel quel au prix de base.
+        </p>
+      )}
 
       {ajoutOuvert && (
         <NouvelleOptionForm
@@ -154,7 +161,7 @@ function OptionRow({ option, onSaved }: { option: OptionRowClient; onSaved: () =
         <input
           value={valeur}
           onChange={(e) => setValeur(e.target.value)}
-          placeholder="Info libre (optionnel)"
+          placeholder={option.type === "taille" ? "Dimensions ex: 90x90" : "Info libre (optionnel)"}
           className="w-40 border border-base-600 bg-base-950 p-2 text-[15px] focus:border-accent-pink focus:outline-none"
         />
       )}
@@ -268,17 +275,17 @@ function NouvelleOptionForm({
           required
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          placeholder="Ex : Bleu klein"
+          placeholder={type === "taille" ? "Ex : 90 x 90 cm" : "Ex : Bleu klein"}
           className="w-52 border border-base-600 bg-base-900 p-2 text-[15px] focus:border-accent-pink focus:outline-none"
         />
       </label>
       {!estCouleur && (
         <label className="flex flex-col gap-1 text-xs text-ink-faint">
-          Info libre
+          {type === "taille" ? "Dimensions (LxH cm)" : "Info libre"}
           <input
             value={valeur}
             onChange={(e) => setValeur(e.target.value)}
-            placeholder="Optionnel"
+            placeholder={type === "taille" ? "Ex : 90x90" : "Optionnel"}
             className="w-40 border border-base-600 bg-base-900 p-2 text-[15px] focus:border-accent-pink focus:outline-none"
           />
         </label>

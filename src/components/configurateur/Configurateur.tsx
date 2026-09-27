@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CategorieTapis, TypeOption } from "@/types/database.types";
-import { calculerPrixCatalogue, type OptionCatalogue } from "@/lib/catalogue";
+import { calculerPrixTuftage, type OptionCatalogue } from "@/lib/catalogue";
 import { StepOption } from "./StepOption";
+import { StepCouleurs } from "./StepCouleurs";
 import { UploadDesign } from "./UploadDesign";
 import { PriceSummary } from "./PriceSummary";
 import { Button } from "@/components/ui/Button";
@@ -17,17 +18,15 @@ interface ConfigurateurProps {
   options: Record<TypeOption, OptionCatalogue[]>;
 }
 
-type Selection = Partial<Record<TypeOption, string>>;
-type Etape = TypeOption | "personnalisation" | "recap";
+interface Selection {
+  taille?: string;
+  forme?: string;
+  couleurs?: string[];
+}
 
-const ETAPES: { type: TypeOption; label: string }[] = [
-  { type: "taille", label: "Taille" },
-  { type: "forme", label: "Forme" },
-  { type: "couleur", label: "Couleur" },
-  { type: "matiere", label: "Matière" },
-];
+type Etape = "taille" | "forme" | "description" | "image" | "couleur" | "recap";
 
-const ORDRE_ETAPES: Etape[] = [...ETAPES.map((e) => e.type), "personnalisation", "recap"];
+const ORDRE_ETAPES: Etape[] = ["taille", "forme", "description", "image", "couleur", "recap"];
 
 export function Configurateur({ categorie, categorieLabel, prixBase, options }: ConfigurateurProps) {
   const router = useRouter();
@@ -42,14 +41,20 @@ export function Configurateur({ categorie, categorieLabel, prixBase, options }: 
 
   const etapeActuelle = ORDRE_ETAPES[etapeIndex];
   const prix = useMemo(
-    () => calculerPrixCatalogue(prixBase, options, selection),
+    () => calculerPrixTuftage(prixBase, options, selection),
     [prixBase, options, selection]
   );
 
   const etapeConfigValide =
-    etapeActuelle === "personnalisation" || etapeActuelle === "recap"
+    etapeActuelle === "recap"
       ? true
-      : Boolean(selection[etapeActuelle as TypeOption]);
+      : etapeActuelle === "couleur"
+        ? (selection.couleurs?.length ?? 0) > 0
+        : etapeActuelle === "description"
+          ? message.trim().length > 0
+          : etapeActuelle === "image"
+            ? fichiers.length > 0
+            : Boolean(selection[etapeActuelle as "taille" | "forme"]);
 
   function suivant() {
     if (etapeIndex < ORDRE_ETAPES.length - 1) setEtapeIndex(etapeIndex + 1);
@@ -74,9 +79,13 @@ export function Configurateur({ categorie, categorieLabel, prixBase, options }: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           categorie,
-          configuration: selection,
+          configuration: {
+            taille: selection.taille,
+            forme: selection.forme,
+            couleur: selection.couleurs ?? [],
+          },
           fichiersUrls: fichiers.map((f) => f.chemin),
-          messageClient: message || undefined,
+          messageClient: message,
         }),
       });
 
@@ -114,35 +123,56 @@ export function Configurateur({ categorie, categorieLabel, prixBase, options }: 
           </div>
         </div>
 
-        {etapeActuelle !== "personnalisation" && etapeActuelle !== "recap" && (
+        {etapeActuelle === "taille" && (
           <StepOption
-            label={ETAPES.find((e) => e.type === etapeActuelle)!.label}
-            options={options[etapeActuelle as TypeOption]}
-            valeur={selection[etapeActuelle as TypeOption]}
-            onChange={(valeur) =>
-              setSelection((s) => ({ ...s, [etapeActuelle as TypeOption]: valeur }))
-            }
+            label="Taille"
+            options={options.taille}
+            valeur={selection.taille}
+            onChange={(valeur) => setSelection((s) => ({ ...s, taille: valeur }))}
           />
         )}
 
-        {etapeActuelle === "personnalisation" && (
-          <UploadDesign fichiers={fichiers} onChange={setFichiers} />
+        {etapeActuelle === "forme" && (
+          <StepOption
+            label="Forme"
+            options={options.forme}
+            valeur={selection.forme}
+            onChange={(valeur) => setSelection((s) => ({ ...s, forme: valeur }))}
+          />
         )}
 
-        {etapeActuelle === "recap" && (
+        {etapeActuelle === "couleur" && (
+          <StepCouleurs
+            options={options.couleur}
+            valeurs={selection.couleurs ?? []}
+            onChange={(valeurs) => setSelection((s) => ({ ...s, couleurs: valeurs }))}
+          />
+        )}
+
+        {etapeActuelle === "description" && (
           <div className="flex flex-col gap-4">
-            <h2 className="font-display text-2xl">Un mot sur ton projet ? (optionnel)</h2>
+            <h2 className="font-display text-2xl">Décris ton projet</h2>
+            <p className="text-[15px] text-ink-muted">
+              Le motif, l&apos;ambiance, ce que tu veux retrouver sur ton tapis tufté — plus c&apos;est
+              précis, plus le devis le sera aussi.
+            </p>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               maxLength={1000}
-              rows={5}
-              placeholder="Précise ici tout détail utile : délai souhaité, contexte du logo, contrainte particulière…"
+              rows={6}
+              required
+              placeholder="Ex : logo de mon garage centré, fond noir, lettrage doré..."
               className="border border-base-600 bg-base-800 p-4 text-[15px] text-ink-light placeholder:text-ink-faint focus:border-accent-pink focus:outline-none"
             />
-            {erreur && <p className="text-sm text-accent-pink">{erreur}</p>}
           </div>
         )}
+
+        {etapeActuelle === "image" && (
+          <UploadDesign fichiers={fichiers} onChange={setFichiers} requis />
+        )}
+
+        {etapeActuelle === "recap" && erreur && <p className="text-sm text-accent-pink">{erreur}</p>}
 
         <div className="flex items-center justify-between pt-4">
           <Button variant="outline" onClick={precedent} {...(etapeIndex === 0 ? { disabled: true } : {})}>
