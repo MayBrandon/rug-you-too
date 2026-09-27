@@ -1,5 +1,15 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { STATUTS_DEVIS_LABELS } from "@/lib/constants";
+
+const COULEUR_STATUT: Record<string, string> = {
+  nouvelle: "border-accent-pink",
+  en_etude: "border-accent-gold",
+  devis_envoye: "border-accent-teal",
+  accepte: "border-accent-violet",
+  refuse: "border-base-600",
+  expire: "border-base-600",
+};
 
 export default async function AdminDashboard() {
   const supabase = createClient();
@@ -8,7 +18,7 @@ export default async function AdminDashboard() {
     .from("demandes_devis")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(20);
+    .limit(50);
 
   return (
     <div className="flex flex-col gap-6">
@@ -16,13 +26,27 @@ export default async function AdminDashboard() {
 
       <div className="flex flex-col gap-2">
         {demandes?.map((d) => (
-          <div key={d.id} className="flex items-center justify-between border border-base-600 bg-base-800 p-4">
+          <Link
+            key={d.id}
+            href={`/admin/devis/${d.id}`}
+            className={`flex items-center justify-between border-l-4 bg-base-800 p-4 hover:bg-base-700 ${COULEUR_STATUT[d.statut] ?? "border-base-600"}`}
+          >
             <div>
               <div className="font-semibold uppercase">{d.categorie}</div>
-              <div className="text-sm text-ink-faint">{STATUTS_DEVIS_LABELS[d.statut]}</div>
+              <div className="text-sm text-ink-faint">
+                {new Date(d.created_at).toLocaleDateString("fr-FR", {
+                  day: "2-digit",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
             </div>
-            {/* Lien vers /admin/devis/[id] pour étudier et fixer le prix */}
-          </div>
+            <div className="flex items-center gap-4">
+              {d.prix_propose && <span className="text-accent-gold">{d.prix_propose} €</span>}
+              <span className="text-sm text-ink-faint">{STATUTS_DEVIS_LABELS[d.statut]}</span>
+            </div>
+          </Link>
         ))}
         {!demandes?.length && <p className="text-ink-faint">Aucune demande pour le moment.</p>}
       </div>
