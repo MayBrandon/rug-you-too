@@ -29,7 +29,7 @@ export function StepCouleurs({ options, valeurs, onChange }: StepCouleursProps) 
     <div className="flex flex-col gap-4">
       <h2 className="font-display text-2xl">Couleurs</h2>
       <p className="text-[15px] text-ink-muted">Choisis une ou plusieurs couleurs pour ton tapis.</p>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {options.map((option) => {
           const selected = valeurs.includes(option.label);
           const swatch = HEX_REGEX.test(option.valeur) ? option.valeur : null;

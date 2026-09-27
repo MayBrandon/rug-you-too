@@ -64,15 +64,37 @@ cross join (values
   ('Découpe sur mesure', 30, 2)
 ) as v(label, supplement, ordre);
 
--- --- Couleurs (plusieurs choix possibles dans le configurateur) ------------
+-- --- Couleurs (choix multiples possibles dans le configurateur) ------------
+-- Large palette de laine, du neutre au vif. Suppléments : 0€ pour les teintes
+-- courantes, 3-5€ pour les teintes plus rares/plus difficiles à doser, 8€
+-- pour les dorés/argentés, 10€ pour une couleur personnalisée sur mesure.
 insert into public.options_configuration (categorie, type, label, valeur, supplement_prix, ordre)
 select c.categorie, 'couleur', v.label, v.valeur, v.supplement, v.ordre
 from (values ('voiture'::categorie_tapis), ('sol'::categorie_tapis), ('mur'::categorie_tapis), ('bureau'::categorie_tapis)) as c(categorie)
 cross join (values
   ('Noir', '#151316', 0, 0),
-  ('Terracotta', '#C1583B', 0, 1),
+  ('Blanc cassé', '#F0EAE0', 0, 1),
   ('Gris chiné', '#8A8478', 0, 2),
-  ('Rose fuchsia', '#FF3D9A', 5, 3),
-  ('Turquoise', '#2DE0C4', 5, 4),
-  ('Couleur personnalisée', '#7A3DFF', 10, 5)
+  ('Gris anthracite', '#3A3B3C', 0, 3),
+  ('Beige sable', '#D8C4A0', 0, 4),
+  ('Camel', '#C69B6D', 0, 5),
+  ('Marron chocolat', '#4A2C20', 0, 6),
+  ('Terracotta', '#C1583B', 0, 7),
+  ('Bordeaux', '#6E1F2A', 0, 8),
+  ('Rouge coquelicot', '#D62828', 3, 9),
+  ('Rose poudré', '#F4C2C2', 3, 10),
+  ('Rose fuchsia', '#FF3D9A', 5, 11),
+  ('Orange brûlé', '#D2691E', 3, 12),
+  ('Jaune moutarde', '#D8A93B', 3, 13),
+  ('Vert olive', '#6B7A3A', 0, 14),
+  ('Vert sapin', '#2F4F3E', 0, 15),
+  ('Vert menthe', '#A8E6C9', 3, 16),
+  ('Turquoise', '#2DE0C4', 5, 17),
+  ('Bleu ciel', '#7EC8E3', 3, 18),
+  ('Bleu marine', '#1B2A4A', 0, 19),
+  ('Lavande', '#C7A8E0', 3, 20),
+  ('Violet prune', '#5B2A5E', 5, 21),
+  ('Argenté', '#C4C4C4', 5, 22),
+  ('Doré', '#D4AF37', 8, 23),
+  ('Couleur personnalisée', '#7A3DFF', 10, 24)
 ) as v(label, valeur, supplement, ordre);
